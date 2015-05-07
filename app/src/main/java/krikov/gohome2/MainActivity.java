@@ -3,17 +3,14 @@ package krikov.gohome2;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
-import android.content.DialogInterface.OnDismissListener;
 import android.media.RingtoneManager;
 import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.AndroidException;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
-import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
@@ -39,6 +36,7 @@ public class MainActivity extends ActionBarActivity {
     DBHandler dbHandler;
     private PendingIntent pendingIntent;
     private PendingIntent PreAlarm_PendIntent;
+    public String extTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,16 +47,49 @@ public class MainActivity extends ActionBarActivity {
         pickerTime.getCurrentHour();
         pickerTime.getCurrentMinute();
         dbHandler = new DBHandler(this, null, null,  1);
-        //String[] separated = WorkTimeParameter.split(":");
-        //int AddHour = Integer.valueOf(separated[1]);
-        //int AddMin = Integer.valueOf(separated[2]);
         DBQuery("tbl_Teken", "teken", "");
         if (dbString.equals("") )
         {
             GetUserWorkTimer() ;
         }
+        DBQuery("tbl_ExtraTime", "AllowExtraTime", "");
+        if (dbString.equals(""))
+        {
+            extTime = "";
+        }
+        else
+        {
+            extTime = "Yes";
+        }
         showtime();
+    }
 
+    public void GetSetttingsForExtraTime(){
+        if (extTime == "Yes")
+        {
+            ExtraHours();
+        }
+        else
+        {
+            SetAlarm();
+        }
+    }
+
+    public void SetAlarm(){
+        DBQuery("tbl_Teken", "teken", "");
+        WorkTimeParameter = dbString.split(":");
+        Hrs = pickerTime.getCurrentHour() + Integer.valueOf(WorkTimeParameter[0]);
+        Min = pickerTime.getCurrentMinute() + Integer.valueOf(WorkTimeParameter[1]);
+        if (Min > 59) {
+            Hrs = Hrs + 1;
+            Min = Min - 60;
+        }
+        if (Hrs > 24) {
+            Hrs = Hrs - 24;
+        }
+        dbHandler.addData("tbl_Notification", "notification", Hrs + ":" + Min);
+        Toast.makeText(getBaseContext(), "ללכת הביתה ב :" + Hrs + ":" + Min, Toast.LENGTH_LONG).show();
+        alarmMethod();
     }
 
     public void showtime() {
@@ -66,21 +97,8 @@ public class MainActivity extends ActionBarActivity {
         OnButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                GetSetttingsForExtraTime();
 
-                DBQuery("tbl_Teken","teken","");
-                WorkTimeParameter = dbString.split(":");
-                Hrs = pickerTime.getCurrentHour() + Integer.valueOf(WorkTimeParameter[0]);
-                Min = pickerTime.getCurrentMinute() + Integer.valueOf(WorkTimeParameter[1]);
-                if (Min > 59) {
-                    Hrs = Hrs + 1;
-                    Min = Min - 60;
-                }
-                if (Hrs > 24) {
-                    Hrs = Hrs - 24;
-                }
-                dbHandler.addData("tbl_Notification","notification",Hrs+":"+Min);
-                Toast.makeText(getBaseContext(), "ללכת הביתה ב :" + Hrs + ":" + Min, Toast.LENGTH_LONG).show();
-                alarmMethod();
             }
         });
 
@@ -210,6 +228,7 @@ public class MainActivity extends ActionBarActivity {
         popDialog.setPositiveButton("אישור",
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
+                        SetAlarm();
                         dialog.dismiss();
                     }
 
@@ -310,8 +329,18 @@ public class MainActivity extends ActionBarActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        // Inflate the menu; this adds items to the action bar if it is present.
+        if (extTime == "")
+        {
+            MenuItem EW = menu.findItem(R.id.ExtraTime);
+            EW.setChecked(false);
+        }
+        else
+        {
+            MenuItem EW = menu.findItem(R.id.ExtraTime);
+            EW.setChecked(true);
+        }
         return true;
     }
 
@@ -348,6 +377,21 @@ public class MainActivity extends ActionBarActivity {
             case R.id.RemindMeIn:
                 RemindMeinSlider();
                 return true;
+            case R.id.ExtraTime:
+                if (item.isChecked()) {
+                    dbHandler.addData("tbl_ExtraTime","AllowExtraTime","");
+                    item.setChecked(false);
+                    extTime = "";
+                }
+                else
+                {
+                    dbHandler.addData("tbl_ExtraTime","AllowExtraTime","Yes");
+                    item.setChecked(true);
+                    extTime = "Yes";
+                }
+
+                return  true;
+
 
         }
 
