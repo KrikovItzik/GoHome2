@@ -9,8 +9,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.renderscript.Sampler;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
@@ -21,10 +24,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
-
 import java.util.Calendar;
 
 public class MainActivity extends ActionBarActivity {
+    public static RadioGroup RG;
     public TimePicker pickerTime;
     public Button OnButton;
     String WorkTimeParameter[];
@@ -34,8 +37,8 @@ public class MainActivity extends ActionBarActivity {
     int Min;
     public String chosenRingtone;
     DBHandler dbHandler;
-    private PendingIntent pendingIntent;
-    private PendingIntent PreAlarm_PendIntent;
+    public PendingIntent pendingIntent;
+    public PendingIntent PreAlarm_PendIntent;
     public String extTime;
 
     @Override
@@ -65,7 +68,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void GetSetttingsForExtraTime(){
-        if (extTime == "Yes")
+        if (extTime.equals("Yes") )
         {
             ExtraHours();
         }
@@ -116,8 +119,8 @@ public class MainActivity extends ActionBarActivity {
 //        int Year = c.get(Calendar.YEAR);
 //        int Day = c.get(Calendar.DAY_OF_MONTH);
 //        int Month = c.get(Calendar.AM_PM);
-        int Hours = pickerTime.getCurrentHour();
-        int Minutes = pickerTime.getCurrentMinute();
+//        int Hours = pickerTime.getCurrentHour();
+//        int Minutes = pickerTime.getCurrentMinute();
         int CalcHours = pickerTime.getCurrentHour() + Integer.valueOf(WorkTimeParameter[0]);
         int CalcMinutes = pickerTime.getCurrentMinute() + Integer.valueOf(WorkTimeParameter[1]);
 
@@ -228,8 +231,12 @@ public class MainActivity extends ActionBarActivity {
         popDialog.setPositiveButton("אישור",
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        SetAlarm();
+
+//                        SetAlarm();
                         dialog.dismiss();
+                        RG = (RadioGroup) findViewById(R.id.radioGroup);
+                        int selectedPosition =  RG.getCheckedRadioButtonId();
+
                     }
 
                 });
@@ -257,7 +264,7 @@ public class MainActivity extends ActionBarActivity {
         seek1.setMax(30);
         dbString = null;
         DBQuery("tbl_PRE_ALARM","pre_alarm","");
-        if (dbString == "") {
+        if (dbString.equals("")) {
             seek1.setProgress(15);
         }
         else {
@@ -271,12 +278,12 @@ public class MainActivity extends ActionBarActivity {
             }
 
             public void onStartTrackingTouch(SeekBar arg0) {
-                // TODO Auto-generated method stub
+
 
             }
 
             public void onStopTrackingTouch(SeekBar seekBar) {
-                // TODO Auto-generated method stub
+
 
             }
         });
@@ -331,7 +338,7 @@ public class MainActivity extends ActionBarActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         // Inflate the menu; this adds items to the action bar if it is present.
-        if (extTime == "")
+        if (extTime.equals(""))
         {
             MenuItem EW = menu.findItem(R.id.ExtraTime);
             EW.setChecked(false);
@@ -396,5 +403,5 @@ public class MainActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
-        }
+    }
 }
