@@ -25,9 +25,11 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 import java.util.Calendar;
+import java.util.Set;
 
 public class MainActivity extends ActionBarActivity {
-    public static RadioGroup RG;
+    private RadioGroup RG;
+    private RadioButton RB;
     public TimePicker pickerTime;
     public Button OnButton;
     String WorkTimeParameter[];
@@ -35,6 +37,8 @@ public class MainActivity extends ActionBarActivity {
     static final int UniqueID = 10101978;
     int Hrs;
     int Min;
+    public int CalcHours;
+    public int CalcMinutes;
     public String chosenRingtone;
     DBHandler dbHandler;
     public PendingIntent pendingIntent;
@@ -74,15 +78,32 @@ public class MainActivity extends ActionBarActivity {
         }
         else
         {
-            SetAlarm();
+            SetAlarm(0);
         }
     }
 
-    public void SetAlarm(){
+    public void SetAlarm(Integer idx){
         DBQuery("tbl_Teken", "teken", "");
         WorkTimeParameter = dbString.split(":");
-        Hrs = pickerTime.getCurrentHour() + Integer.valueOf(WorkTimeParameter[0]);
-        Min = pickerTime.getCurrentMinute() + Integer.valueOf(WorkTimeParameter[1]);
+
+        if (idx == 0 ) {
+            Hrs = pickerTime.getCurrentHour() + Integer.valueOf(WorkTimeParameter[0]);
+            Min = pickerTime.getCurrentMinute() + Integer.valueOf(WorkTimeParameter[1]);
+            CalcHours = pickerTime.getCurrentHour() + Integer.valueOf(WorkTimeParameter[0]);
+            CalcMinutes =  pickerTime.getCurrentMinute() + Integer.valueOf(WorkTimeParameter[1]) ;
+        }
+        if (idx == 1){
+            Hrs = pickerTime.getCurrentHour() + Integer.valueOf(WorkTimeParameter[0]) + 3;
+            Min = pickerTime.getCurrentMinute() + Integer.valueOf(WorkTimeParameter[1]) + 30;
+            CalcHours = pickerTime.getCurrentHour() + Integer.valueOf(WorkTimeParameter[0]) + 3;
+            CalcMinutes =  pickerTime.getCurrentMinute() + Integer.valueOf(WorkTimeParameter[1]) + 30 ;
+        }
+        if (idx == 2){
+            Hrs = pickerTime.getCurrentHour() + Integer.valueOf(WorkTimeParameter[0]) + 6;
+            Min = pickerTime.getCurrentMinute() + Integer.valueOf(WorkTimeParameter[1]);
+            CalcHours = pickerTime.getCurrentHour() + Integer.valueOf(WorkTimeParameter[0]) + 6;
+            CalcMinutes =  pickerTime.getCurrentMinute() + Integer.valueOf(WorkTimeParameter[1]);
+        }
         if (Min > 59) {
             Hrs = Hrs + 1;
             Min = Min - 60;
@@ -121,8 +142,7 @@ public class MainActivity extends ActionBarActivity {
 //        int Month = c.get(Calendar.AM_PM);
 //        int Hours = pickerTime.getCurrentHour();
 //        int Minutes = pickerTime.getCurrentMinute();
-        int CalcHours = pickerTime.getCurrentHour() + Integer.valueOf(WorkTimeParameter[0]);
-        int CalcMinutes = pickerTime.getCurrentMinute() + Integer.valueOf(WorkTimeParameter[1]);
+
 
         if (CalcHours >= 24 || CalcHours >=23 && CalcMinutes >= 60) {
             currentDayOfMonth = c.get(Calendar.DAY_OF_MONTH) + 1;
@@ -177,7 +197,7 @@ public class MainActivity extends ActionBarActivity {
                 String userSet = textInput.getText().toString();
                 String tbl_Name = "tbl_Teken";
                 String tbl_Column = "teken";
-                String tbl_Data = userSet.toString() ;
+                String tbl_Data = userSet;
                 dbHandler.addData(tbl_Name,tbl_Column,tbl_Data);
                 Toast.makeText(getBaseContext(),"שעות תקן נשמרו",Toast.LENGTH_SHORT).show();
             }
@@ -221,22 +241,20 @@ public class MainActivity extends ActionBarActivity {
         final LayoutInflater inflater = (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
 
         final View Viewlayout = inflater.inflate(R.layout.extra_time,
-                (ViewGroup) findViewById(R.id.layout_dialog));
+                (ViewGroup) findViewById(R.id.layout_extraTime));
 
         popDialog.setIcon(android.R.drawable.ic_menu_help);
         popDialog.setTitle("תכנון שעות נוספות להיום");
         popDialog.setView(Viewlayout);
-
+        RG = (RadioGroup) Viewlayout.findViewById(R.id.radioGroup);
         // Button OK
-        popDialog.setPositiveButton("אישור",
-                new DialogInterface.OnClickListener() {
+        popDialog.setPositiveButton("אישור",new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-
-//                        SetAlarm();
+                        int radioButtonID = RG.getCheckedRadioButtonId();
+                        View radioButton = RG.findViewById(radioButtonID);
+                        int idx = RG.indexOfChild(radioButton);
+                        SetAlarm(idx);
                         dialog.dismiss();
-                        RG = (RadioGroup) findViewById(R.id.radioGroup);
-                        int selectedPosition =  RG.getCheckedRadioButtonId();
-
                     }
 
                 });
